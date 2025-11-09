@@ -5,7 +5,7 @@ from typing import List
 from datetime import datetime, timedelta
 
 from app.core.database import get_db
-from app.models import Farmer, Farm, NotificationLog, IrrigationSchedule
+from app.models import Farmer, Farm, NotificationLog, IrrigationSchedule, IrrigationStatusEnum, NotificationStatusEnum
 from app.schemas import SystemStats, AdminFarmerResponse
 
 router = APIRouter()
@@ -28,7 +28,7 @@ def get_system_stats(db: Session = Depends(get_db)):
     active_schedules = db.query(func.count(IrrigationSchedule.id)).filter(
         and_(
             IrrigationSchedule.recommended_date >= today,
-            IrrigationSchedule.status == "pending"
+            IrrigationSchedule.status == IrrigationStatusEnum.PENDING
         )
     ).scalar()
     

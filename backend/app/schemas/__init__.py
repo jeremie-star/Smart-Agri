@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
@@ -13,7 +13,8 @@ class FarmerBase(BaseModel):
     name: str
     language_preference: LanguageEnum = LanguageEnum.ENGLISH
     
-    @validator('phone_number')
+    @field_validator('phone_number')
+    @classmethod
     def validate_phone_number(cls, v):
         # Basic phone number validation for African countries
         pattern = r'^\+?[1-9]\d{1,14}$'
@@ -25,7 +26,8 @@ class FarmerBase(BaseModel):
 class FarmerCreate(FarmerBase):
     password: str
     
-    @validator('password')
+    @field_validator('password')
+    @classmethod
     def validate_password(cls, v):
         if len(v) < 6:
             raise ValueError('Password must be at least 6 characters long')
@@ -45,7 +47,7 @@ class FarmerResponse(FarmerBase):
     updated_at: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class FarmerLogin(BaseModel):
@@ -61,19 +63,22 @@ class FarmBase(BaseModel):
     longitude: float
     soil_type: Optional[str] = None
     
-    @validator('land_size')
+    @field_validator('land_size')
+    @classmethod
     def validate_land_size(cls, v):
         if v <= 0:
             raise ValueError('Land size must be positive')
         return v
     
-    @validator('latitude')
+    @field_validator('latitude')
+    @classmethod
     def validate_latitude(cls, v):
         if not -90 <= v <= 90:
             raise ValueError('Latitude must be between -90 and 90')
         return v
     
-    @validator('longitude')
+    @field_validator('longitude')
+    @classmethod
     def validate_longitude(cls, v):
         if not -180 <= v <= 180:
             raise ValueError('Longitude must be between -180 and 180')
@@ -98,7 +103,7 @@ class FarmResponse(FarmBase):
     created_at: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # Irrigation Schedule schemas
@@ -120,7 +125,7 @@ class IrrigationScheduleResponse(IrrigationScheduleBase):
     created_at: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # Notification schemas
@@ -139,7 +144,7 @@ class NotificationResponse(BaseModel):
     sent_at: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # Weather schemas
@@ -191,3 +196,28 @@ class ErrorResponse(BaseModel):
     error: str
     code: str
     details: dict = {}
+
+
+# Chat schemas
+class ChatQuestion(BaseModel):
+    question: str
+    include_farm_context: bool = True
+
+
+class ChatResponse(BaseModel):
+    id: UUID
+    question: str
+    response: str
+    context_data: Optional[str] = None
+    language: LanguageEnum
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class ChatHistory(BaseModel):
+    chat_logs: List[ChatResponse]
+    total: int
+    page: int
+    per_page: int

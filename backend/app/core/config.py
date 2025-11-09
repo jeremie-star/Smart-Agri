@@ -46,7 +46,11 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     
     # CORS
-    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:8080"]
+    cors_origins_string: str = "http://localhost:3000,http://localhost:8080"
+    
+    @property
+    def cors_origins(self) -> List[str]:
+        return [origin.strip() for origin in self.cors_origins_string.split(",")]
     
     # Rate Limiting
     rate_limit_requests: int = 100

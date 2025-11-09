@@ -72,11 +72,14 @@ async def generate_irrigation_schedule(
     for schedule in created_schedules:
         db.refresh(schedule)
     
+    # Convert to response models
+    schedule_responses = [IrrigationScheduleResponse.model_validate(schedule) for schedule in created_schedules]
+    
     return {
         "message": "Irrigation schedule generated successfully",
         "schedules_created": len(created_schedules),
         "general_advice": recommendations.get("general_advice", ""),
-        "schedules": created_schedules
+        "schedules": schedule_responses
     }
 
 
