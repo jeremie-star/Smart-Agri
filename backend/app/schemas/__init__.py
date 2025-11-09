@@ -196,3 +196,28 @@ class ErrorResponse(BaseModel):
     error: str
     code: str
     details: dict = {}
+
+
+# Chat schemas
+class ChatQuestion(BaseModel):
+    question: str
+    include_farm_context: bool = True
+
+
+class ChatResponse(BaseModel):
+    id: UUID
+    question: str
+    response: str
+    context_data: Optional[str] = None
+    language: LanguageEnum
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class ChatHistory(BaseModel):
+    chat_logs: List[ChatResponse]
+    total: int
+    page: int
+    per_page: int

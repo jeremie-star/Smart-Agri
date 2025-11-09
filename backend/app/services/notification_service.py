@@ -197,6 +197,81 @@ class NotificationService:
         
         return success
     
+    async def process_sms_chat_message(self, phone_number: str, message: str, db) -> str:
+        """Process incoming SMS as a chat message and return AI response"""
+        from app.models import Farmer, ChatLog
+        from app.services.ai_service import ai_recommendation_service
+        import json
+        
+        # Find farmer by phone number
+        farmer = db.query(Farmer).filter(Farmer.phone_number == phone_number).first()
+        if not farmer:
+            return self.translate_message(
+                "Please register first by texting 'REGISTER' to get started with Smart Irrigation Assistant.",
+                LanguageEnum.ENGLISH
+            )
+        
+        # Check for special commands
+        message_lower = message.lower().strip()
+        
+        if message_lower in ['help', 'msaada', 'ubufasha']:
+            return self.translate_message(
+                "Welcome to Smart Irrigation Assistant! Ask me questions about farming, irrigation, crops, or soil. Examples: 'How often should I water tomatoes?' or 'Best fertilizer for vegetables?'",
+                farmer.language_preference
+            )
+        
+        if message_lower in ['history', 'historia', 'amateka']:
+            # Get recent chat history
+            recent_chats = db.query(ChatLog).filter(
+                ChatLog.farmer_id == farmer.id
+            ).order_by(ChatLog.created_at.desc()).limit(3).all()
+            
+            if not recent_chats:
+                return self.translate_message("No recent conversations found.", farmer.language_preference)
+            
+            history_text = "Recent conversations:\n"
+            for chat in reversed(recent_chats):
+                history_text += f"Q: {chat.question[:50]}...\n"
+                history_text += f"A: {chat.response[:100]}...\n\n"
+            
+            return history_text[:160]  # SMS character limit
+        
+        # Process as regular chat question
+        farmer_data = {
+            "name": farmer.name,
+            "language_preference": farmer.language_preference.value,
+            "id": str(farmer.id)
+        }
+        
+        try:
+            # Generate AI response
+            ai_response = await ai_recommendation_service.generate_chat_response(
+                message, farmer_data
+            )
+            
+            # Store conversation
+            chat_log = ChatLog(
+                farmer_id=farmer.id,
+                question=message,
+                response=ai_response,
+                language=farmer.language_preference
+            )
+            db.add(chat_log)
+            db.commit()
+            
+            # Format for SMS (limit to 160 characters)
+            if len(ai_response) > 160:
+                ai_response = ai_response[:157] + "..."
+            
+            return ai_response
+            
+        except Exception as e:
+            print(f"SMS Chat processing error: {e}")
+            return self.translate_message(
+                "Sorry, I couldn't process your question right now. Please try again later.",
+                farmer.language_preference
+            )
+    
     def create_irrigation_message(self, crop_type: str, water_amount: float, weather_condition: str, reasoning: str) -> str:
         """Create irrigation reminder message"""
         message = f"Irrigation Reminder: It's time to water your {crop_type} crop with {water_amount:.0f} liters of water. Weather conditions: {weather_condition}. Reason: {reasoning}"

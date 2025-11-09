@@ -4,10 +4,14 @@ from httpx import AsyncClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
+import os
 
 from main import app
 from app.core.database import get_db, Base
 from app.core.config import settings
+
+# Disable rate limiting for tests
+os.environ["DISABLE_RATE_LIMITING"] = "true"
 
 # Test database URL
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -80,3 +84,42 @@ def sample_farm_data():
         "longitude": 30.061,
         "soil_type": "Clay"
     }
+
+
+@pytest.fixture
+def db():
+    """Create database session for testing"""
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@pytest.fixture
+def test_farmer_token(client: TestClient):
+    """Create a test farmer and return authentication token"""
+    import random
+    # Use random phone number to avoid conflicts
+    phone_number = f"+25078812{random.randint(1000, 9999)}"
+    
+    farmer_data = {
+        "phone_number": phone_number,
+        "name": "Test Farmer",
+        "language_preference": "English", 
+        "password": "testpassword123"
+    }
+    
+    # Register farmer
+    response = client.post("/api/auth/register", json=farmer_data)
+    if response.status_code != 200:
+        print(f"Registration failed: {response.status_code}, {response.json()}")
+        raise Exception(f"Failed to register farmer: {response.json()}")
+    
+    return response.json()["access_token"]
+
+
+@pytest.fixture
+def test_farm_data(sample_farm_data: dict):
+    """Return test farm data"""
+    return sample_farm_data

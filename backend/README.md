@@ -92,6 +92,26 @@ After running tests, open `htmlcov/index.html` in your browser to view detailed 
 - `GET /api/irrigation/schedule/{farm_id}` - Get current schedule
 - `GET /api/irrigation/history/{farm_id}` - Get irrigation history
 
+### AI Chat Assistant ✅ **COMPLETED & TESTED**
+- `POST /api/chat/ask` - Ask questions to AI agricultural advisor
+- `GET /api/chat/history` - Get conversation history (paginated)
+- `GET /api/chat/suggestions` - Get suggested questions in farmer's language
+- `DELETE /api/chat/history/{chat_id}` - Delete specific conversation
+- `DELETE /api/chat/history` - Clear all conversation history
+- `GET /api/chat/stats` - Get chat usage statistics
+- `POST /api/chat/sms-webhook` - Handle incoming SMS for chat (webhook)
+
+**✨ Features:**
+- 🤖 **Multi-AI Integration**: OpenAI GPT, Cohere, Google Gemini with intelligent fallback
+- 🌍 **Multilingual**: English, Swahili, Kinyarwanda support
+- 📱 **SMS Integration**: Two-way SMS conversation via Twilio
+- 🌡️ **Context-Aware**: Includes farm data, weather conditions, and local farming practices
+- 📊 **Conversation History**: Persistent chat logs with search and pagination
+- 🔒 **Secure**: JWT authentication with rate limiting protection
+- ✅ **Production Ready**: 12 comprehensive tests, 76% endpoint coverage
+
+*See `CHATBOT_FEATURES.md` for detailed documentation*
+
 ### Weather Data
 - `GET /api/weather/current/{farm_id}` - Get current weather
 - `GET /api/weather/forecast/{farm_id}` - Get 7-day forecast

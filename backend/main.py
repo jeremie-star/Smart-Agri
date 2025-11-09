@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import uvicorn
+import os
 
 from app.core.config import settings
 from app.core.database import engine
@@ -17,6 +18,7 @@ from app.api.endpoints.irrigation import router as irrigation_router
 from app.api.endpoints.weather import router as weather_router
 from app.api.endpoints.notifications import router as notifications_router
 from app.api.endpoints.admin import router as admin_router
+from app.api.endpoints.chat import router as chat_router
 from app.utils.middleware import rate_limiter, create_error_response
 
 
@@ -59,8 +61,8 @@ app.add_middleware(
 # Add rate limiting middleware
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
-    # Skip rate limiting for health check and docs
-    if request.url.path in ["/health", "/docs", "/redoc", "/openapi.json"]:
+    # Skip rate limiting for health check, docs, and tests
+    if request.url.path in ["/health", "/docs", "/redoc", "/openapi.json"] or os.getenv("DISABLE_RATE_LIMITING"):
         return await call_next(request)
     
     try:
@@ -119,6 +121,7 @@ app.include_router(farms_router, prefix="/api/farms", tags=["farms"])
 app.include_router(irrigation_router, prefix="/api/irrigation", tags=["irrigation"])
 app.include_router(weather_router, prefix="/api/weather", tags=["weather"])
 app.include_router(notifications_router, prefix="/api/notifications", tags=["notifications"])
+app.include_router(chat_router, prefix="/api/chat", tags=["chat"])
 app.include_router(admin_router, prefix="/api/admin", tags=["admin"])
 
 

@@ -266,6 +266,192 @@ Respond ONLY with valid JSON.
         
         # Use fallback if all AI APIs fail
         return self._get_fallback_recommendations(farm_data, weather_data)
+    
+    async def generate_chat_response(self, question: str, farmer_data: Dict, context_data: Dict = None) -> str:
+        """Generate AI-powered chat response for farmer questions"""
+        
+        # Create context-aware prompt
+        prompt = self._create_chat_prompt(question, farmer_data, context_data)
+        
+        # Try AI APIs in order of preference
+        response = None
+        
+        # Try OpenAI first
+        if self.openai_api_key:
+            response = await self._call_openai_chat_api(prompt)
+        
+        # Fallback to Cohere
+        if not response and self.cohere_api_key:
+            response = await self._call_cohere_chat_api(prompt)
+        
+        # Fallback to Gemini
+        if not response and self.gemini_api_key:
+            response = await self._call_gemini_chat_api(prompt)
+        
+        # Use fallback if all AI APIs fail
+        if not response:
+            response = self._get_fallback_chat_response(question, farmer_data)
+        
+        return response
+    
+    def _create_chat_prompt(self, question: str, farmer_data: Dict, context_data: Dict = None) -> str:
+        """Create context-aware prompt for chat responses"""
+        
+        # Base context about the farmer
+        farmer_name = farmer_data.get('name', 'Farmer')
+        language = farmer_data.get('language_preference', 'English')
+        
+        # Farm context if available
+        farm_context = ""
+        if context_data and context_data.get('farms'):
+            farms = context_data['farms']
+            farm_context = f"\nFarm Information:\n"
+            for i, farm in enumerate(farms[:3], 1):  # Limit to 3 farms
+                farm_context += f"- Farm {i}: {farm.get('crop_type', 'Unknown crop')} on {farm.get('land_size', 0)} acres\n"
+        
+        # Weather context if available
+        weather_context = ""
+        if context_data and context_data.get('weather'):
+            weather = context_data['weather']
+            weather_context = f"\nCurrent Weather:\n- Temperature: {weather.get('temperature', 'N/A')}°C\n- Humidity: {weather.get('humidity', 'N/A')}%\n- Precipitation: {weather.get('precipitation', 'N/A')}mm\n"
+        
+        prompt = f"""
+You are an expert agricultural advisor specializing in African smallholder farming. 
+You are helping {farmer_name}, a farmer who speaks {language}.
+
+FARMER'S QUESTION: {question}
+{farm_context}
+{weather_context}
+
+Please provide a helpful, practical response in {language}. Consider:
+1. Local farming conditions in East Africa
+2. Smallholder farmer constraints (limited resources, small plots)
+3. Sustainable farming practices
+4. Climate-appropriate advice
+5. Cost-effective solutions
+
+Keep your response conversational, practical, and under 500 words.
+If the question is not related to farming, politely redirect to agricultural topics.
+
+Respond in {language} language.
+"""
+        return prompt
+    
+    async def _call_openai_chat_api(self, prompt: str) -> Optional[str]:
+        """Call OpenAI API for chat responses"""
+        if not self.openai_api_key:
+            return None
+        
+        try:
+            openai.api_key = self.openai_api_key
+            response = await openai.ChatCompletion.acreate(
+                model=self.openai_model,
+                messages=[
+                    {"role": "system", "content": "You are an expert agricultural advisor for African smallholder farmers."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=800
+            )
+            
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            print(f"OpenAI Chat API error: {e}")
+            return None
+    
+    async def _call_cohere_chat_api(self, prompt: str) -> Optional[str]:
+        """Call Cohere API for chat responses"""
+        if not self.cohere_api_key:
+            return None
+        
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    "https://api.cohere.ai/v1/generate",
+                    headers={
+                        "Authorization": f"Bearer {self.cohere_api_key}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "model": "command",
+                        "prompt": prompt,
+                        "max_tokens": 800,
+                        "temperature": 0.7
+                    }
+                )
+                response.raise_for_status()
+                data = response.json()
+                return data["generations"][0]["text"].strip()
+        except Exception as e:
+            print(f"Cohere Chat API error: {e}")
+            return None
+    
+    async def _call_gemini_chat_api(self, prompt: str) -> Optional[str]:
+        """Call Google Gemini API for chat responses"""
+        if not self.gemini_api_key:
+            return None
+        
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={self.gemini_api_key}",
+                    headers={"Content-Type": "application/json"},
+                    json={
+                        "contents": [{
+                            "parts": [{"text": prompt}]
+                        }],
+                        "generationConfig": {
+                            "temperature": 0.7,
+                            "maxOutputTokens": 800
+                        }
+                    }
+                )
+                response.raise_for_status()
+                data = response.json()
+                return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        except Exception as e:
+            print(f"Gemini Chat API error: {e}")
+            return None
+    
+    def _get_fallback_chat_response(self, question: str, farmer_data: Dict) -> str:
+        """Generate fallback chat response when AI APIs fail"""
+        language = farmer_data.get('language_preference', 'English')
+        farmer_name = farmer_data.get('name', 'Farmer')
+        
+        # Simple keyword-based responses
+        question_lower = question.lower()
+        
+        if any(word in question_lower for word in ['water', 'irrigation', 'irrigate']):
+            if language == 'Swahili':
+                return f"Hujambo {farmer_name}! Kuhusu umwagiliaji, ni muhimu kutazama hali ya hewa na ardhi. Mwagilie wakati mvua ni kidogo na joto ni kali. Tumia maji kwa busara."
+            elif language == 'Kinyarwanda':
+                return f"Muraho {farmer_name}! Ku bijyanye n'uhira, ni ngombwa kureba ikirere n'ubutaka. Hira iyo imvura ari nke kandi ubushyuhe bukabije. Koresha amazi mu buryo bwiza."
+            else:
+                return f"Hello {farmer_name}! For irrigation, consider weather conditions and soil moisture. Water when rainfall is low and temperatures are high. Use water efficiently."
+        
+        elif any(word in question_lower for word in ['fertilizer', 'nutrients', 'compost']):
+            if language == 'Swahili':
+                return f"Hujambo {farmer_name}! Kwa mbolea, tumia mbolea asili kama mbolea ya ng'ombe au komposti. Ni rahisi na bei nafuu kuliko kemikali."
+            elif language == 'Kinyarwanda':
+                return f"Muraho {farmer_name}! Ku bijyanye n'ifumbire, koresha ifumbire kamere nk'amafi y'inka cyangwa kompost. Byoroshye kandi bihenze kurusha imiti."
+            else:
+                return f"Hello {farmer_name}! For fertilizers, consider organic options like cow manure or compost. They're cost-effective and improve soil health."
+        
+        elif any(word in question_lower for word in ['pest', 'insects', 'disease']):
+            if language == 'Swahili':
+                return f"Hujambo {farmer_name}! Kwa wadudu na magonjwa, tumia njia za asili kama mazao ya mchanganyiko na dawa za mimea. Angalia mazao yako mara kwa mara."
+            elif language == 'Kinyarwanda':
+                return f"Muraho {farmer_name}! Ku bijyanye n'udukoko n'indwara, koresha uburyo busanzwe nk'ihuriro ry'ibihingwa n'imiti y'ibimera. Genzura ibihingwa byawe buri gihe."
+            else:
+                return f"Hello {farmer_name}! For pests and diseases, try natural methods like crop rotation and plant-based pesticides. Monitor your crops regularly."
+        
+        else:
+            if language == 'Swahili':
+                return f"Hujambo {farmer_name}! Nina furaha kukusaidia na maswali ya kilimo. Je, una swali maalum kuhusu mimea, maji, au udongo?"
+            elif language == 'Kinyarwanda':
+                return f"Muraho {farmer_name}! Nishimiye kukugufasha mu kibazo cy'ubuhinzi. Ufite ikibazo runaka ku bijyanye n'ibihingwa, amazi, cyangwa ubutaka?"
+            else:
+                return f"Hello {farmer_name}! I'm happy to help with your farming questions. Do you have specific questions about crops, water, or soil?"
 
 
 # Singleton instance
