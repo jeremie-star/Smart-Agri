@@ -7,7 +7,16 @@ import uvicorn
 from app.core.config import settings
 from app.core.database import engine
 from app.models import Base
-from app.api import api_router
+from fastapi import APIRouter
+
+# Import individual routers
+from app.api.endpoints.auth import router as auth_router
+from app.api.endpoints.farmers import router as farmers_router 
+from app.api.endpoints.farms import router as farms_router
+from app.api.endpoints.irrigation import router as irrigation_router
+from app.api.endpoints.weather import router as weather_router
+from app.api.endpoints.notifications import router as notifications_router
+from app.api.endpoints.admin import router as admin_router
 from app.utils.middleware import rate_limiter, create_error_response
 
 
@@ -104,7 +113,13 @@ async def health_check():
 
 
 # Include API routes
-app.include_router(api_router, prefix="/api")
+app.include_router(auth_router, prefix="/api/auth", tags=["authentication"])
+app.include_router(farmers_router, prefix="/api/farmers", tags=["farmers"])
+app.include_router(farms_router, prefix="/api/farms", tags=["farms"])
+app.include_router(irrigation_router, prefix="/api/irrigation", tags=["irrigation"])
+app.include_router(weather_router, prefix="/api/weather", tags=["weather"])
+app.include_router(notifications_router, prefix="/api/notifications", tags=["notifications"])
+app.include_router(admin_router, prefix="/api/admin", tags=["admin"])
 
 
 # Root endpoint

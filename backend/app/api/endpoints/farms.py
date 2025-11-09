@@ -20,7 +20,7 @@ def create_farm(
     """Create a new farm"""
     db_farm = Farm(
         farmer_id=current_farmer.id,
-        **farm_data.dict()
+        **farm_data.model_dump()
     )
     
     db.add(db_farm)

@@ -226,7 +226,7 @@ Respond ONLY with valid JSON.
             return self._get_fallback_recommendations(farm_data, [])
         
         weather_data = [forecast.current] + forecast.forecast[:6]  # Current + 6 days
-        weather_summary = json.dumps([w.dict() for w in weather_data])
+        weather_summary = json.dumps([w.model_dump(mode='json') for w in weather_data])
         
         # Check cache
         cache_key = self._get_cache_key(farm_data, weather_summary)
