@@ -1,4 +1,3 @@
--- Active: 1754389073596@@localhost@5432@smart_irrigation_db@public
 from sqlalchemy import Column, String, Float, DateTime, Text, Enum, ForeignKey, Boolean, TypeDecorator
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 from sqlalchemy.orm import relationship
