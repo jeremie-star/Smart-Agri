@@ -24,7 +24,7 @@ alembic upgrade head
 
 #### Option A: Using the startup script (Recommended)
 ```bash
-./start_server.sh
+./start.sh
 ```
 
 #### Option B: Using uvicorn directly

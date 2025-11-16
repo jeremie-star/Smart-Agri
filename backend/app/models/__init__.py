@@ -1,4 +1,3 @@
--- Active: 1754389073596@@localhost@5432@smart_irrigation_db@public
 from sqlalchemy import Column, String, Float, DateTime, Text, Enum, ForeignKey, Boolean, TypeDecorator
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 from sqlalchemy.orm import relationship
@@ -110,7 +109,7 @@ class Farm(Base):
 class IrrigationSchedule(Base):
     __tablename__ = "irrigation_schedules"
     
-    id = Column(UUID, primary_key=True, default=uuid.uuid4, index=True)
+    id = Column(UUID, primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
     farm_id = Column(UUID, ForeignKey("farms.id"), nullable=False)
     recommended_date = Column(DateTime(timezone=True), nullable=False)
     water_amount = Column(Float, nullable=False)  # in liters
