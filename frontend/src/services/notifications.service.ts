@@ -17,9 +17,7 @@ export const notificationsApi = {
   },
 
   // Get notification history
-  getHistory: (page: number = 1, perPage: number = 20): Promise<PaginatedResponse<Notification>> => {
-    return apiClient.get<PaginatedResponse<Notification>>(
-      `/api/notifications/history?page=${page}&per_page=${perPage}`
-    );
+  getHistory: (limit: number = 50): Promise<Notification[]> => {
+    return apiClient.get<Notification[]>(`/api/notifications/history?limit=${limit}`);
   },
 };

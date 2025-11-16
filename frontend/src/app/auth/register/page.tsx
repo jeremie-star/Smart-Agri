@@ -7,7 +7,7 @@ import { motion } from "framer-motion"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { Droplets, Mail, Lock, User, Phone, Loader2 } from "lucide-react"
+import { Droplets, Phone, Lock, User, Globe, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,10 +17,10 @@ import { authService } from "@/services/auth.service"
 import toast from "react-hot-toast"
 
 const registerSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  phone_number: z.string().min(10, "Phone number must be at least 10 digits").regex(/^\+?\d+$/, "Invalid phone number format"),
+  name: z.string().min(2, "Name must be at least 2 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  full_name: z.string().min(2, "Full name must be at least 2 characters"),
-  phone_number: z.string().min(10, "Phone number must be at least 10 digits"),
+  language_preference: z.enum(["English", "Swahili", "Kinyarwanda"]),
 })
 
 type RegisterFormData = z.infer<typeof registerSchema>
@@ -43,8 +43,14 @@ export default function RegisterPage() {
       setIsLoading(true)
       setError(null)
       
-      await authService.register(data)
-      toast.success("Registration successful! Please check your email to verify your account.")
+      // Backend uses LanguageEnum values
+      const registerData = {
+        ...data,
+        language_preference: data.language_preference as any // Type assertion for enum compatibility
+      }
+      
+      await authService.register(registerData)
+      toast.success("Registration successful! You can now log in with your phone number.")
       router.push("/auth/login")
     } catch (err: any) {
       const message = err.response?.data?.detail || "Registration failed. Please try again."
@@ -86,36 +92,19 @@ export default function RegisterPage() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="full_name">Full Name</Label>
+                <Label htmlFor="name">Full Name</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    id="full_name"
+                    id="name"
                     type="text"
-                    placeholder="John Doe"
+                    placeholder="John Uwimana"
                     className="pl-10"
-                    {...register("full_name")}
+                    {...register("name")}
                   />
                 </div>
-                {errors.full_name && (
-                  <p className="text-sm text-destructive">{errors.full_name.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="john@example.com"
-                    className="pl-10"
-                    {...register("email")}
-                  />
-                </div>
-                {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email.message}</p>
+                {errors.name && (
+                  <p className="text-sm text-destructive">{errors.name.message}</p>
                 )}
               </div>
 
@@ -126,13 +115,32 @@ export default function RegisterPage() {
                   <Input
                     id="phone_number"
                     type="tel"
-                    placeholder="+250 XXX XXX XXX"
+                    placeholder="+250788123456"
                     className="pl-10"
                     {...register("phone_number")}
                   />
                 </div>
                 {errors.phone_number && (
                   <p className="text-sm text-destructive">{errors.phone_number.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="language_preference">Language</Label>
+                <div className="relative">
+                  <Globe className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10" />
+                  <select
+                    id="language_preference"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pl-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    {...register("language_preference")}
+                  >
+                    <option value="English">English</option>
+                    <option value="Swahili">Swahili (Kiswahili)</option>
+                    <option value="Kinyarwanda">Kinyarwanda</option>
+                  </select>
+                </div>
+                {errors.language_preference && (
+                  <p className="text-sm text-destructive">{errors.language_preference.message}</p>
                 )}
               </div>
 

@@ -91,30 +91,23 @@ export interface GenerateIrrigationRequest {
 }
 
 // Weather Types
-export interface Weather {
+export interface WeatherData {
   temperature: number;
   humidity: number;
   precipitation: number;
   wind_speed: number;
-  condition: string;
   description: string;
-  icon: string;
+  date: string;
 }
 
 export interface WeatherForecast {
-  date: string;
-  temperature_max: number;
-  temperature_min: number;
-  precipitation: number;
-  humidity: number;
-  condition: string;
-  icon: string;
+  current: WeatherData;
+  forecast: WeatherData[];
 }
 
 // Chat Types
 export interface ChatMessage {
   id: string;
-  farmer_id: string;
   question: string;
   response: string;
   context_data?: string;
@@ -124,21 +117,14 @@ export interface ChatMessage {
 
 export interface ChatAskRequest {
   question: string;
-  farm_id?: string;
   include_farm_context?: boolean;
-  language?: string;
 }
 
-export interface ChatSuggestion {
-  suggestions: string[];
-  language: string;
-}
-
-export interface ChatStats {
-  total_messages: number;
-  messages_today: number;
-  messages_this_week: number;
-  most_common_topics: string[];
+export interface ChatHistory {
+  chat_logs: ChatMessage[];
+  total: number;
+  page: number;
+  per_page: number;
 }
 
 // Notification Types
@@ -162,6 +148,13 @@ export interface Notification {
   channel: NotificationChannel;
   status: NotificationStatus;
   sent_at: string;
+}
+
+export interface NotificationPreferences {
+  notification_enabled: boolean;
+  sms_enabled: boolean;
+  email_enabled: boolean;
+  email_address?: string;
 }
 
 export interface SendNotificationRequest {

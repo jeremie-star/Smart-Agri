@@ -7,7 +7,7 @@ import { motion } from "framer-motion"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { Droplets, Mail, Lock, Loader2 } from "lucide-react"
+import { Droplets, Phone, Lock, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,7 +17,7 @@ import { authService } from "@/services/auth.service"
 import toast from "react-hot-toast"
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  phone_number: z.string().min(10, "Phone number must be at least 10 digits"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 })
 
@@ -84,19 +84,19 @@ export default function LoginPage() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="phone_number">Phone Number</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="john@example.com"
+                    id="phone_number"
+                    type="tel"
+                    placeholder="+250788123456"
                     className="pl-10"
-                    {...register("email")}
+                    {...register("phone_number")}
                   />
                 </div>
-                {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email.message}</p>
+                {errors.phone_number && (
+                  <p className="text-sm text-destructive">{errors.phone_number.message}</p>
                 )}
               </div>
 
