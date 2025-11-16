@@ -1,4 +1,4 @@
-import openai
+from openai import AsyncOpenAI
 import httpx
 import json
 import redis
@@ -12,6 +12,7 @@ class AIRecommendationService:
     def __init__(self):
         self.openai_api_key = settings.openai_api_key
         self.openai_model = settings.openai_model
+        self.openai_client = AsyncOpenAI(api_key=settings.openai_api_key) if settings.openai_api_key else None
         self.cohere_api_key = settings.cohere_api_key
         self.gemini_api_key = settings.gemini_api_key
         self.redis_client = redis.from_url(settings.redis_url, decode_responses=True)
@@ -78,12 +79,11 @@ Respond ONLY with valid JSON.
     
     async def _call_openai_api(self, prompt: str) -> Optional[Dict]:
         """Call OpenAI API for recommendations"""
-        if not self.openai_api_key:
+        if not self.openai_client:
             return None
         
         try:
-            openai.api_key = self.openai_api_key
-            response = await openai.ChatCompletion.acreate(
+            response = await self.openai_client.chat.completions.create(
                 model=self.openai_model,
                 messages=[
                     {"role": "system", "content": "You are an expert agricultural advisor."},
@@ -135,7 +135,7 @@ Respond ONLY with valid JSON.
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={self.gemini_api_key}",
+                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.gemini_api_key}",
                     headers={"Content-Type": "application/json"},
                     json={
                         "contents": [{
@@ -145,7 +145,8 @@ Respond ONLY with valid JSON.
                             "temperature": 0.3,
                             "maxOutputTokens": 1500
                         }
-                    }
+                    },
+                    timeout=30.0
                 )
                 response.raise_for_status()
                 data = response.json()
@@ -339,12 +340,11 @@ Respond in {language} language.
     
     async def _call_openai_chat_api(self, prompt: str) -> Optional[str]:
         """Call OpenAI API for chat responses"""
-        if not self.openai_api_key:
+        if not self.openai_client:
             return None
         
         try:
-            openai.api_key = self.openai_api_key
-            response = await openai.ChatCompletion.acreate(
+            response = await self.openai_client.chat.completions.create(
                 model=self.openai_model,
                 messages=[
                     {"role": "system", "content": "You are an expert agricultural advisor for African smallholder farmers."},
@@ -394,7 +394,7 @@ Respond in {language} language.
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={self.gemini_api_key}",
+                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.gemini_api_key}",
                     headers={"Content-Type": "application/json"},
                     json={
                         "contents": [{
@@ -404,7 +404,8 @@ Respond in {language} language.
                             "temperature": 0.7,
                             "maxOutputTokens": 800
                         }
-                    }
+                    },
+                    timeout=30.0
                 )
                 response.raise_for_status()
                 data = response.json()

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
+import uuid
 from datetime import datetime, timedelta
 
 from app.core.database import get_db
@@ -64,13 +65,9 @@ async def generate_irrigation_schedule(
                 status=IrrigationStatusEnum.PENDING
             )
             db.add(schedule)
+            db.commit()  # Commit each schedule individually
+            db.refresh(schedule)
             created_schedules.append(schedule)
-    
-    db.commit()
-    
-    # Refresh all created schedules
-    for schedule in created_schedules:
-        db.refresh(schedule)
     
     # Convert to response models
     schedule_responses = [IrrigationScheduleResponse.model_validate(schedule) for schedule in created_schedules]
