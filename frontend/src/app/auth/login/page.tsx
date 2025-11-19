@@ -42,8 +42,19 @@ export default function LoginPage() {
       setError(null)
       
       await authService.login(data)
+      
+      // Get user profile to check role
+      const user = await authService.getProfile()
+      localStorage.setItem("user_profile", JSON.stringify(user))
+      
       toast.success("Login successful!")
-      router.push("/dashboard")
+      
+      // Redirect based on role
+      if (user.role === "admin" || user.role === "super_admin") {
+        router.push("/admin/dashboard")
+      } else {
+        router.push("/dashboard")
+      }
     } catch (err: any) {
       const message = err.response?.data?.detail || "Login failed. Please check your credentials."
       setError(message)

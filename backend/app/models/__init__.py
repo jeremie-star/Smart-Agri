@@ -51,6 +51,12 @@ class LanguageEnum(enum.Enum):
     KINYARWANDA = "Kinyarwanda"
 
 
+class RoleEnum(enum.Enum):
+    FARMER = "farmer"
+    ADMIN = "admin"
+    SUPER_ADMIN = "super_admin"
+
+
 class NotificationChannelEnum(enum.Enum):
     SMS = "SMS"
     EMAIL = "Email"
@@ -77,6 +83,7 @@ class Farmer(Base):
     phone_number = Column(String, unique=True, index=True, nullable=False)
     name = Column(String, nullable=False)
     language_preference = Column(Enum(LanguageEnum), default=LanguageEnum.ENGLISH)
+    role = Column(Enum(RoleEnum), default=RoleEnum.FARMER)
     password_hash = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)

@@ -7,6 +7,17 @@ import re
 from app.models import LanguageEnum, NotificationChannelEnum, NotificationStatusEnum, IrrigationStatusEnum
 
 
+# Import RoleEnum
+try:
+    from app.models import RoleEnum
+except ImportError:
+    import enum
+    class RoleEnum(enum.Enum):
+        FARMER = "farmer"
+        ADMIN = "admin"
+        SUPER_ADMIN = "super_admin"
+
+
 # Base schemas
 class FarmerBase(BaseModel):
     phone_number: str
@@ -41,6 +52,7 @@ class FarmerUpdate(BaseModel):
 
 class FarmerResponse(FarmerBase):
     id: UUID
+    role: RoleEnum = RoleEnum.FARMER
     is_active: bool
     is_verified: bool
     created_at: datetime
