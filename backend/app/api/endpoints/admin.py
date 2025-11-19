@@ -5,17 +5,18 @@ from typing import List
 from datetime import datetime, timedelta
 
 from app.core.database import get_db
+from app.api.endpoints.auth import get_current_admin
 from app.models import Farmer, Farm, NotificationLog, IrrigationSchedule, IrrigationStatusEnum, NotificationStatusEnum
 from app.schemas import SystemStats, AdminFarmerResponse
 
 router = APIRouter()
 
-# Note: In production, add proper admin authentication
-# For now, we'll assume admin routes are protected at the gateway level
-
 
 @router.get("/stats", response_model=SystemStats)
-def get_system_stats(db: Session = Depends(get_db)):
+def get_system_stats(
+    current_admin: Farmer = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
     """Get system usage statistics"""
     today = datetime.utcnow().date()
     month_start = datetime.utcnow().replace(day=1).date()
@@ -53,6 +54,7 @@ def get_system_stats(db: Session = Depends(get_db)):
 
 @router.get("/farmers", response_model=List[AdminFarmerResponse])
 def get_all_farmers(
+    current_admin: Farmer = Depends(get_current_admin),
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = 100
@@ -83,6 +85,7 @@ def get_all_farmers(
 
 @router.get("/reports")
 def generate_usage_reports(
+    current_admin: Farmer = Depends(get_current_admin),
     db: Session = Depends(get_db),
     days: int = 30
 ):

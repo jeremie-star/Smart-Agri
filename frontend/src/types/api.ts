@@ -37,11 +37,18 @@ export enum LanguageEnum {
   KINYARWANDA = "Kinyarwanda",
 }
 
+export enum RoleEnum {
+  FARMER = "farmer",
+  ADMIN = "admin",
+  SUPER_ADMIN = "super_admin",
+}
+
 export interface Farmer {
   id: string;
   phone_number: string;
   name: string;
   language_preference: LanguageEnum;
+  role: RoleEnum;
   is_active: boolean;
   is_verified: boolean;
   created_at: string;

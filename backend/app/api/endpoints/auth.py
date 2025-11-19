@@ -51,6 +51,18 @@ def get_current_active_farmer(current_farmer: Farmer = Depends(get_current_farme
     return current_farmer
 
 
+def get_current_admin(current_farmer: Farmer = Depends(get_current_active_farmer)):
+    """Get current user and verify admin role"""
+    from app.models import RoleEnum
+    
+    if current_farmer.role not in [RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    return current_farmer
+
+
 @router.post("/register", response_model=Token)
 async def register_farmer(farmer_data: FarmerCreate, db: Session = Depends(get_db)):
     """Register a new farmer"""

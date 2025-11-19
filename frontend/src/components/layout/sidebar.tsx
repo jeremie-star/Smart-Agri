@@ -2,7 +2,7 @@
 
 import React from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
   LayoutDashboard,
@@ -19,6 +19,9 @@ import {
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { authService } from "@/services/auth.service"
+import type { Farmer } from "@/types/api"
+import toast from "react-hot-toast"
 
 interface SidebarProps {
   className?: string
@@ -64,7 +67,45 @@ const navigationItems = [
 
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const [isCollapsed, setIsCollapsed] = React.useState(false)
+  const [user, setUser] = React.useState<Farmer | null>(null)
+
+  // Fetch user once on mount, with caching
+  React.useEffect(() => {
+    const cachedUser = localStorage.getItem("user_profile")
+    if (cachedUser) {
+      setUser(JSON.parse(cachedUser))
+    } else if (authService.isAuthenticated()) {
+      authService.getProfile()
+        .then((profile) => {
+          setUser(profile)
+          localStorage.setItem("user_profile", JSON.stringify(profile))
+        })
+        .catch(() => {
+          // Silently fail, keep user as null
+        })
+    }
+  }, [])
+
+  // Get user initials for avatar fallback
+  const getUserInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  // Handle logout
+  const handleLogout = () => {
+    authService.logout()
+    localStorage.removeItem("user_profile")
+    setUser(null)
+    toast.success("Logged out successfully")
+    router.push("/login")
+  }
 
   return (
     <aside
@@ -123,27 +164,49 @@ export function Sidebar({ className }: SidebarProps) {
 
         {/* User Profile */}
         <div className="border-t p-4">
-          <div className={cn("flex items-center", isCollapsed && "justify-center")}>
-            <Avatar className="h-10 w-10">
-              <AvatarImage src="/placeholder-avatar.jpg" alt="User" />
-              <AvatarFallback>JD</AvatarFallback>
-            </Avatar>
-            {!isCollapsed && (
-              <div className="ml-3 flex-1">
-                <p className="text-sm font-medium">John Doe</p>
-                <p className="text-xs text-muted-foreground">Farmer</p>
+          {user ? (
+            <>
+              <div className={cn("flex items-center", isCollapsed && "justify-center")}>
+                <Avatar className="h-10 w-10">
+                  <AvatarFallback className="bg-green-600 text-white">
+                    {getUserInitials(user.name)}
+                  </AvatarFallback>
+                </Avatar>
+                {!isCollapsed && (
+                  <div className="ml-3 flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate" title={user.name}>
+                      {user.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {user.language_preference}
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          {!isCollapsed && (
-            <Button
-              variant="ghost"
-              className="mt-2 w-full justify-start"
-              size="sm"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
+              {!isCollapsed && (
+                <Button
+                  variant="ghost"
+                  className="mt-2 w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+                  size="sm"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </Button>
+              )}
+            </>
+          ) : (
+            <div className={cn("flex items-center", isCollapsed && "justify-center")}>
+              <Avatar className="h-10 w-10">
+                <AvatarFallback className="bg-muted">?</AvatarFallback>
+              </Avatar>
+              {!isCollapsed && (
+                <div className="ml-3 flex-1">
+                  <p className="text-sm font-medium">Guest</p>
+                  <p className="text-xs text-muted-foreground">Not logged in</p>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

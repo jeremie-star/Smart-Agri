@@ -61,8 +61,18 @@ app.add_middleware(
 # Add rate limiting middleware
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
-    # Skip rate limiting for health check, docs, and tests
-    if request.url.path in ["/health", "/docs", "/redoc", "/openapi.json"] or os.getenv("DISABLE_RATE_LIMITING"):
+    # Skip rate limiting for certain paths
+    exempt_paths = [
+        "/health", 
+        "/docs", 
+        "/redoc", 
+        "/openapi.json",
+    ]
+    
+    # Skip rate limiting in development or if disabled
+    if (request.url.path in exempt_paths or 
+        os.getenv("DISABLE_RATE_LIMITING") or
+        settings.debug):
         return await call_next(request)
     
     try:

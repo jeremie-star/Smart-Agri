@@ -46,15 +46,15 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     
     # CORS
-    cors_origins_string: str = "http://localhost:3000,http://localhost:8080"
+    cors_origins_string: str = "http://localhost:3000"
     
     @property
     def cors_origins(self) -> List[str]:
         return [origin.strip() for origin in self.cors_origins_string.split(",")]
     
-    # Rate Limiting
-    rate_limit_requests: int = 100
-    rate_limit_window: int = 3600
+    # Rate Limiting (more generous for development)
+    rate_limit_requests: int = 1000  # Increased from 100 to 1000
+    rate_limit_window: int = 60  # Changed from 3600 (1 hour) to 60 seconds
     
     # Scheduler
     scheduler_timezone: str = "Africa/Kigali"
