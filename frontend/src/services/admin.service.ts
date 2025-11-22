@@ -40,6 +40,40 @@ export interface UsageReport {
   language_distribution: Array<{ language: string; count: number }>;
 }
 
+export interface AdminFarm {
+  id: string;
+  crop_type: string;
+  land_size: number;
+  latitude: number;
+  longitude: number;
+  soil_type?: string | null;
+  farmer_id: string;
+  farmer_name?: string | null;
+  created_at: string;
+}
+
+export interface AdminSchedule {
+  id: string;
+  farm_id: string;
+  farm_name?: string | null;
+  recommended_date: string;
+  water_amount: number;
+  weather_condition?: string | null;
+  ai_reasoning?: string | null;
+  status?: string | null;
+  created_at: string;
+}
+
+export interface AdminNotificationLog {
+  id: string;
+  farmer_id: string;
+  farmer_name?: string | null;
+  message: string;
+  channel?: string | null;
+  status?: string | null;
+  sent_at: string;
+}
+
 export const adminApi = {
   // Get system statistics
   getStats: (): Promise<SystemStats> => {
@@ -54,5 +88,38 @@ export const adminApi = {
   // Get usage reports
   getReports: (days: number = 30): Promise<UsageReport> => {
     return apiClient.get<UsageReport>(`/api/admin/reports?days=${days}`);
+  },
+
+  // Farms (admin)
+  getAllFarms: (skip: number = 0, limit: number = 100): Promise<AdminFarm[]> => {
+    return apiClient.get<AdminFarm[]>(`/api/admin/farms/all?skip=${skip}&limit=${limit}`);
+  },
+  getFarm: (id: string): Promise<AdminFarm> => {
+    return apiClient.get<AdminFarm>(`/api/admin/farms/${id}`);
+  },
+  updateFarm: (id: string, data: Partial<AdminFarm>) => {
+    return apiClient.put(`/api/admin/farms/${id}`, data);
+  },
+  deleteFarm: (id: string) => {
+    return apiClient.delete(`/api/admin/farms/${id}`);
+  },
+
+  // Schedules (admin)
+  getSchedules: (skip: number = 0, limit: number = 100): Promise<AdminSchedule[]> => {
+    return apiClient.get<AdminSchedule[]>(`/api/admin/schedules/all?skip=${skip}&limit=${limit}`);
+  },
+  updateSchedule: (id: string, data: Partial<AdminSchedule>) => {
+    return apiClient.put(`/api/admin/schedules/${id}`, data);
+  },
+  runSchedule: (id: string) => {
+    return apiClient.post(`/api/admin/schedules/${id}/run`);
+  },
+
+  // Notifications (admin)
+  getNotifications: (skip: number = 0, limit: number = 100): Promise<AdminNotificationLog[]> => {
+    return apiClient.get<AdminNotificationLog[]>(`/api/admin/notifications/all?skip=${skip}&limit=${limit}`);
+  },
+  sendNotifications: (payload: { farmer_ids: string[]; message: string; channel: string }) => {
+    return apiClient.post(`/api/admin/notifications/send`, payload);
   },
 };
