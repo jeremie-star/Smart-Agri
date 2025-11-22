@@ -5,9 +5,14 @@ from typing import List
 from datetime import datetime, timedelta
 
 from app.core.database import get_db
+from app.core.config import settings
 from app.api.endpoints.auth import get_current_admin
-from app.models import Farmer, Farm, NotificationLog, IrrigationSchedule, IrrigationStatusEnum, NotificationStatusEnum
-from app.schemas import SystemStats, AdminFarmerResponse
+from app.models import Farmer, Farm, NotificationLog, IrrigationSchedule, IrrigationStatusEnum, NotificationStatusEnum, NotificationChannelEnum
+from app.schemas import SystemStats, AdminFarmerResponse, FarmResponse, IrrigationScheduleResponse, NotificationResponse, FarmUpdate
+from app.services.notification_service import notification_service
+from uuid import UUID
+from fastapi import Body
+import asyncio
 
 router = APIRouter()
 
@@ -149,3 +154,218 @@ def generate_usage_reports(
         "top_crops": [{"crop": crop, "count": count} for crop, count in crop_stats],
         "language_distribution": [{"language": str(lang), "count": count} for lang, count in language_stats]
     }
+
+
+@router.get("/farms/all")
+def admin_get_all_farms(
+    current_admin: Farmer = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 100
+):
+    """Admin: get all farms with farmer info"""
+    farms = db.query(Farm).offset(skip).limit(limit).all()
+    result = []
+    for farm in farms:
+        result.append({
+            "id": str(farm.id),
+            "crop_type": farm.crop_type,
+            "land_size": farm.land_size,
+            "latitude": farm.latitude,
+            "longitude": farm.longitude,
+            "soil_type": farm.soil_type,
+            "farmer_id": str(farm.farmer_id),
+            "farmer_name": farm.farmer.name if farm.farmer else None,
+            "created_at": farm.created_at
+        })
+    return result
+
+
+@router.get("/farms/{farm_id}")
+def admin_get_farm(farm_id: UUID, current_admin: Farmer = Depends(get_current_admin), db: Session = Depends(get_db)):
+    farm = db.query(Farm).filter(Farm.id == farm_id).first()
+    if not farm:
+        raise HTTPException(status_code=404, detail="Farm not found")
+    return {
+        "id": str(farm.id),
+        "crop_type": farm.crop_type,
+        "land_size": farm.land_size,
+        "latitude": farm.latitude,
+        "longitude": farm.longitude,
+        "soil_type": farm.soil_type,
+        "farmer_id": str(farm.farmer_id),
+        "farmer_name": farm.farmer.name if farm.farmer else None,
+        "created_at": farm.created_at
+    }
+
+
+@router.put("/farms/{farm_id}")
+def admin_update_farm(
+    farm_id: UUID,
+    farm_update: FarmUpdate,
+    current_admin: Farmer = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    farm = db.query(Farm).filter(Farm.id == farm_id).first()
+    if not farm:
+        raise HTTPException(status_code=404, detail="Farm not found")
+    update_data = farm_update.model_dump(exclude_unset=True)
+    for k, v in update_data.items():
+        setattr(farm, k, v)
+    db.commit()
+    db.refresh(farm)
+    return {
+        "id": str(farm.id),
+        "crop_type": farm.crop_type,
+        "land_size": farm.land_size,
+        "latitude": farm.latitude,
+        "longitude": farm.longitude,
+        "soil_type": farm.soil_type,
+        "farmer_id": str(farm.farmer_id),
+        "farmer_name": farm.farmer.name if farm.farmer else None,
+        "created_at": farm.created_at
+    }
+
+
+@router.delete("/farms/{farm_id}")
+def admin_delete_farm(farm_id: UUID, current_admin: Farmer = Depends(get_current_admin), db: Session = Depends(get_db)):
+    farm = db.query(Farm).filter(Farm.id == farm_id).first()
+    if not farm:
+        raise HTTPException(status_code=404, detail="Farm not found")
+    db.delete(farm)
+    db.commit()
+    return {"message": "Farm deleted"}
+
+
+@router.get("/schedules/all")
+def admin_get_schedules(current_admin: Farmer = Depends(get_current_admin), db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
+    schedules = db.query(IrrigationSchedule).offset(skip).limit(limit).all()
+    result = []
+    for s in schedules:
+        result.append({
+            "id": str(s.id),
+            "farm_id": str(s.farm_id),
+            "farm_name": s.farm.crop_type if s.farm else None,
+            "recommended_date": s.recommended_date,
+            "water_amount": s.water_amount,
+            "weather_condition": s.weather_condition,
+            "ai_reasoning": s.ai_reasoning,
+            "status": s.status.value if s.status else None,
+            "created_at": s.created_at
+        })
+    return result
+
+
+@router.put("/schedules/{schedule_id}")
+def admin_update_schedule(schedule_id: UUID, payload: dict = Body(...), current_admin: Farmer = Depends(get_current_admin), db: Session = Depends(get_db)):
+    schedule = db.query(IrrigationSchedule).filter(IrrigationSchedule.id == schedule_id).first()
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    allowed = ["recommended_date", "water_amount", "weather_condition", "ai_reasoning", "status"]
+    for k, v in payload.items():
+        if k in allowed:
+            setattr(schedule, k, v)
+    db.commit()
+    db.refresh(schedule)
+    return {
+        "id": str(schedule.id),
+        "farm_id": str(schedule.farm_id),
+        "recommended_date": schedule.recommended_date,
+        "water_amount": schedule.water_amount,
+        "weather_condition": schedule.weather_condition,
+        "ai_reasoning": schedule.ai_reasoning,
+        "status": schedule.status.value if schedule.status else None,
+        "created_at": schedule.created_at
+    }
+
+
+@router.post("/schedules/{schedule_id}/run")
+async def admin_run_schedule(schedule_id: UUID, current_admin: Farmer = Depends(get_current_admin), db: Session = Depends(get_db)):
+    schedule = db.query(IrrigationSchedule).filter(IrrigationSchedule.id == schedule_id).first()
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    farm = schedule.farm
+    if not farm:
+        raise HTTPException(status_code=400, detail="Associated farm not found")
+    farmer = farm.farmer
+    if not farmer:
+        raise HTTPException(status_code=400, detail="Associated farmer not found")
+
+    # Create message and send via notification service
+    msg = notification_service.create_irrigation_message(farm.crop_type, schedule.water_amount, schedule.weather_condition or "", schedule.ai_reasoning or "")
+    success = False
+    if settings.debug:
+        # In dev just mark as sent
+        success = True
+    else:
+        # attempt SMS send
+        try:
+            success = await notification_service.send_sms(farmer.phone_number, msg, farmer.language_preference)
+        except Exception as e:
+            print(f"Notification send error: {e}")
+            success = False
+
+    # Create log
+    status = NotificationStatusEnum.SENT if success else NotificationStatusEnum.FAILED
+    log = NotificationLog(farmer_id=farmer.id, message=msg, channel=NotificationChannelEnum.SMS, status=status)
+    db.add(log)
+    schedule.status = IrrigationStatusEnum.SENT if success else schedule.status
+    db.commit()
+    db.refresh(schedule)
+
+    return {"success": success, "log_id": str(log.id)}
+
+
+@router.get("/notifications/all")
+def admin_get_notifications(current_admin: Farmer = Depends(get_current_admin), db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
+    logs = db.query(NotificationLog).order_by(NotificationLog.sent_at.desc()).offset(skip).limit(limit).all()
+    result = []
+    for l in logs:
+        result.append({
+            "id": str(l.id),
+            "farmer_id": str(l.farmer_id),
+            "farmer_name": l.farmer.name if l.farmer else None,
+            "message": l.message,
+            "channel": l.channel.value if l.channel else None,
+            "status": l.status.value if l.status else None,
+            "sent_at": l.sent_at
+        })
+    return result
+
+
+from pydantic import BaseModel
+from typing import List
+
+class BulkNotification(BaseModel):
+    farmer_ids: List[UUID]
+    message: str
+    channel: NotificationChannelEnum
+
+
+@router.post("/notifications/send")
+async def admin_send_notifications(payload: BulkNotification, current_admin: Farmer = Depends(get_current_admin), db: Session = Depends(get_db)):
+    results = []
+    for fid in payload.farmer_ids:
+        farmer = db.query(Farmer).filter(Farmer.id == fid).first()
+        if not farmer:
+            results.append({"farmer_id": str(fid), "success": False, "error": "Farmer not found"})
+            continue
+        success = False
+        try:
+            if payload.channel == NotificationChannelEnum.SMS:
+                success = await notification_service.send_sms(farmer.phone_number, payload.message, farmer.language_preference)
+            elif payload.channel == NotificationChannelEnum.EMAIL:
+                success = await notification_service.send_email(farmer.phone_number, "Notification", payload.message, farmer.language_preference)
+            else:
+                # other channels not implemented
+                success = False
+        except Exception as e:
+            print(f"Send error for {farmer.phone_number}: {e}")
+            success = False
+
+        log = NotificationLog(farmer_id=farmer.id, message=payload.message, channel=payload.channel, status=(NotificationStatusEnum.SENT if success else NotificationStatusEnum.FAILED))
+        db.add(log)
+        db.commit()
+        results.append({"farmer_id": str(fid), "success": success, "log_id": str(log.id)})
+
+    return {"results": results}
