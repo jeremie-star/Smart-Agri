@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     
     # CORS
-    cors_origins_string: str = "http://localhost:3000"
+    cors_origins_string: str = "https://smart-agri-five.vercel.app"
     
     @property
     def cors_origins(self) -> List[str]:
