@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head className="">
-        <link rel="icon" href="/logo.png" />
+        <link rel="icon" href="/logo1.png" />
       </head>
       <body
         className={`${inter.variable} font-sans antialiased bg-background text-foreground`}
