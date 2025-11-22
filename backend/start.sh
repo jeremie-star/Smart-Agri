@@ -6,13 +6,6 @@ set -e
 
 echo "🚀 Starting Smart Irrigation Assistant..."
 
-# Check if .env file exists
-if [ ! -f ".env" ]; then
-    echo "📝 Creating .env file from example..."
-    cp .env.example .env
-    echo "⚠️  Please edit .env file with your API keys before running in production"
-fi
-
 # Activate virtual environment if it exists
 if [ -d "venv" ]; then
     source venv/bin/activate
