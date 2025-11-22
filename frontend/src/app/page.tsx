@@ -1,6 +1,5 @@
 "use client"
 
-import React from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { 
@@ -68,13 +67,13 @@ const benefits = [
 
 export default function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-white dark:bg-slate-950">
       {/* Navigation */}
-      <nav className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
+      <nav className="border-b bg-white/80 dark:bg-gray-900/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
             <Droplets className="h-8 w-8 text-green-600" />
-            <span className="text-xl font-bold">Smart Irrigation Assistant</span>
+            <span className="text-xl font-bold text-gray-900 dark:text-white">Smart Irrigation Assistant</span>
           </Link>
           <div className="flex items-center space-x-4">
             <Link href="/auth/login">
@@ -90,7 +89,7 @@ export default function HomePage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 py-20 px-4">
+      <section className="relative overflow-hidden bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 dark:from-green-900 dark:via-blue-900 dark:to-purple-900 py-20 px-4">
         <div className="container mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -101,7 +100,7 @@ export default function HomePage() {
               <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
                 Grow Smarter with AI-Powered Irrigation
               </h1>
-              <p className="text-xl text-gray-700 mb-8">
+              <p className="text-xl text-gray-700 dark:text-gray-300 mb-8">
                 Transform your farming with intelligent water management, real-time weather insights, 
                 and an AI assistant that speaks your language.
               </p>
@@ -117,7 +116,7 @@ export default function HomePage() {
                   </Button>
                 </Link>
               </div>
-              <div className="mt-8 flex flex-wrap gap-6 text-sm text-gray-600">
+              <div className="mt-8 flex flex-wrap gap-6 text-sm text-gray-600 dark:text-white">
                 <div className="flex items-center">
                   <Zap className="h-4 w-4 text-yellow-500 mr-2" />
                   <span>Instant Setup</span>
@@ -139,27 +138,27 @@ export default function HomePage() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="relative"
             >
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-white p-8">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-slate-900 p-8">
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-4 p-4 bg-green-50 rounded-lg">
+                  <div className="flex items-center space-x-4 p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
                     <Droplets className="h-12 w-12 text-green-600" />
                     <div>
-                      <div className="text-sm text-gray-600">Next Irrigation</div>
-                      <div className="text-xl font-bold text-green-600">In 2 days</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">Next Irrigation</div>
+                      <div className="text-xl font-bold text-green-600 dark:text-green-300">In 2 days</div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4 p-4 bg-blue-50 rounded-lg">
+                  <div className="flex items-center space-x-4 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
                     <CloudRain className="h-12 w-12 text-blue-600" />
                     <div>
-                      <div className="text-sm text-gray-600">Weather Forecast</div>
-                      <div className="text-xl font-bold text-blue-600">Sunny, 28°C</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">Weather Forecast</div>
+                      <div className="text-xl font-bold text-blue-600 dark:text-blue-300">Sunny, 28°C</div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4 p-4 bg-purple-50 rounded-lg">
+                  <div className="flex items-center space-x-4 p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
                     <MessageSquare className="h-12 w-12 text-purple-600" />
                     <div>
-                      <div className="text-sm text-gray-600">AI Assistant</div>
-                      <div className="text-xl font-bold text-purple-600">Always Ready</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">AI Assistant</div>
+                      <div className="text-xl font-bold text-purple-600 dark:text-purple-300">Always Ready</div>
                     </div>
                   </div>
                 </div>
@@ -170,7 +169,7 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 bg-white">
+      <section className="py-20 px-4 bg-white dark:bg-slate-900">
         <div className="container mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -179,8 +178,8 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl font-bold mb-4">Powerful Features for Modern Farmers</h2>
-            <p className="text-xl text-gray-600">
+            <h2 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">Powerful Features for Modern Farmers</h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300">
               Everything you need to optimize your irrigation and increase yields
             </p>
           </motion.div>
@@ -194,7 +193,7 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
               >
-                <Card className="h-full hover:shadow-lg transition-shadow border-2 hover:border-green-200">
+                <Card className="h-full hover:shadow-lg transition-shadow border-2 dark:border-neutral-800 hover:border-green-200 dark:hover:border-green-700">
                   <CardHeader>
                     <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4`}>
                       <feature.icon className="h-6 w-6 text-white" />
@@ -202,7 +201,7 @@ export default function HomePage() {
                     <CardTitle>{feature.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <CardDescription className="text-base">
+                    <CardDescription className="text-base text-gray-700 dark:text-gray-300">
                       {feature.description}
                     </CardDescription>
                   </CardContent>
@@ -214,7 +213,7 @@ export default function HomePage() {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 px-4 bg-gradient-to-br from-green-50 to-blue-50">
+      <section className="py-20 px-4 bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900">
         <div className="container mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -227,7 +226,7 @@ export default function HomePage() {
               <h2 className="text-4xl font-bold mb-6">
                 Proven Results for East African Farmers
               </h2>
-              <p className="text-lg text-gray-700 mb-8">
+              <p className="text-lg text-gray-700 dark:text-gray-300 mb-8">
                 Join thousands of farmers who are already saving water, increasing yields, 
                 and getting expert advice through our AI-powered platform.
               </p>
@@ -242,7 +241,7 @@ export default function HomePage() {
                     className="flex items-center space-x-3"
                   >
                     <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />
-                    <span className="text-lg">{benefit}</span>
+                    <span className="text-lg text-gray-900 dark:text-gray-200">{benefit}</span>
                   </motion.div>
                 ))}
               </div>
@@ -253,7 +252,7 @@ export default function HomePage() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="bg-white rounded-2xl shadow-xl p-8"
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-8"
             >
               <h3 className="text-2xl font-bold mb-6">How It Works</h3>
               <div className="space-y-6">
@@ -315,7 +314,7 @@ export default function HomePage() {
               Join thousands of farmers using AI to grow smarter and save water
             </p>
             <Link href="/auth/register">
-              <Button size="lg" className="bg-white text-green-600 hover:bg-gray-100 text-lg px-12">
+              <Button size="lg" className="bg-white text-green-600 hover:bg-gray-100 dark:bg-slate-800 dark:text-green-400 dark:hover:bg-slate-700 text-lg px-12">
                 Get Started Free <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
