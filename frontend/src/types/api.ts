@@ -134,6 +134,18 @@ export interface ChatHistory {
   per_page: number;
 }
 
+export interface ChatSuggestion {
+  suggestions: string[];
+  language?: LanguageEnum;
+}
+
+export interface ChatStats {
+  total_chats: number;
+  total_questions: number;
+  average_response_time_ms?: number;
+  active_users?: number;
+}
+
 // Notification Types
 export enum NotificationChannel {
   SMS = "SMS",
@@ -185,5 +197,4 @@ export interface PaginatedResponse<T> {
   total: number;
   page: number;
   per_page: number;
-  pages: number;
 }
