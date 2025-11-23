@@ -12,6 +12,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Smart Irrigation Assistant",
   description: "AI-powered irrigation management for East African farmers",
+  icons: {
+    icon: '/Logo1.png', 
+  },
 };
 
 export default function RootLayout({
