@@ -20,6 +20,12 @@ Opinionated quickstart guide to run the full stack (backend + frontend) locally 
 
 ---
 
+## Admin user
+- Phone-number: 1234567890 
+- password: jeremie
+
+---
+
 ## Requirements
 - Node.js (v18+ recommended) and npm or pnpm/yarn
 - Python 3.10+ and virtualenv
